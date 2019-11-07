@@ -88,7 +88,7 @@
 #
 
 # The directory into which to install libraries, executables and header files
-DESTDIR := /tmp/OpenVDB
+DESTDIR := /usr/local
 
 # The directory into which to install libraries (e.g., for Linux multiarch support)
 DESTDIR_LIB_DIR := $(DESTDIR)/lib
@@ -257,12 +257,12 @@ ifneq (,$(and $(PYTHON_VERSION),$(PYTHON_LIB_DIR),$(PYTHON_INCL_DIR), \
     has_python := yes
 endif
 
-INCLDIRS := -I . -I .. -isystem $(BOOST_INCL_DIR) -isystem $(ILMBASE_INCL_DIR) -isystem $(TBB_INCL_DIR)
+INCLDIRS := -I . -I .. -I $(BOOST_INCL_DIR) -I $(ILMBASE_INCL_DIR) -I $(TBB_INCL_DIR)
 ifeq (yes,$(has_blosc))
-    INCLDIRS += -isystem $(BLOSC_INCL_DIR)
+    INCLDIRS += -I $(BLOSC_INCL_DIR)
 endif
 ifeq (yes,$(has_log4cplus))
-    INCLDIRS += -isystem $(LOG4CPLUS_INCL_DIR)
+    INCLDIRS += -I $(LOG4CPLUS_INCL_DIR)
 endif
 
 CXXFLAGS += -std=c++11
@@ -669,9 +669,9 @@ PYTHON_SRC_NAMES := \
     python/pyTransform.cc \
     python/pyVec3Grid.cc \
 #
-PYCXXFLAGS := -fPIC -isystem python -isystem $(PYTHON_INCL_DIR) -isystem $(PYCONFIG_INCL_DIR)
+PYCXXFLAGS := -fPIC -I python -I $(PYTHON_INCL_DIR) -I $(PYCONFIG_INCL_DIR)
 ifneq (,$(strip $(NUMPY_INCL_DIR)))
-PYCXXFLAGS += -isystem $(NUMPY_INCL_DIR) -DPY_OPENVDB_USE_NUMPY
+PYCXXFLAGS += -I $(NUMPY_INCL_DIR) -DPY_OPENVDB_USE_NUMPY
 endif
 ifneq (no,$(strip $(PYTHON_WRAP_ALL_GRID_TYPES)))
 PYCXXFLAGS += -DPY_OPENVDB_WRAP_ALL_GRID_TYPES
@@ -856,7 +856,7 @@ vdb_print: $(LIBOPENVDB) cmd/openvdb_print.cc
 vdb_render: $(LIBOPENVDB) cmd/openvdb_render.cc
 	@echo "Building $@ because of $(list_deps)"
 	$(CXX) $(CXXFLAGS) -o $@ cmd/openvdb_render.cc -I . \
-	    -isystem $(EXR_INCL_DIR) -isystem $(ILMBASE_INCL_DIR) \
+	    -I $(EXR_INCL_DIR) -I $(ILMBASE_INCL_DIR) \
 	    -Wl,-rpath,$(EXR_LIB_DIR) -L$(EXR_LIB_DIR) $(EXR_LIB) \
 	    -Wl,-rpath,$(ILMBASE_LIB_DIR) -L$(ILMBASE_LIB_DIR) $(ILMBASE_LIB) \
 	    $(LIBOPENVDB_RPATH) -L$(CURDIR) $(LIBOPENVDB) \
@@ -876,7 +876,7 @@ $(LIBVIEWER_INCLUDE_NAMES): openvdb_viewer
 $(LIBVIEWER_OBJ_NAMES): $(LIBVIEWER_INCLUDE_NAMES)
 $(LIBVIEWER_OBJ_NAMES): %.o: %.cc
 	@echo "Building $@ because of $(list_deps)"
-	$(CXX) -c $(CXXFLAGS) -I . -isystem $(GLFW_INCL_DIR) -DGL_GLEXT_PROTOTYPES=1 -fPIC -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -I . -I $(GLFW_INCL_DIR) -DGL_GLEXT_PROTOTYPES=1 -fPIC -o $@ $<
 
 vdb_view: $(LIBOPENVDB) $(LIBVIEWER_OBJ_NAMES) cmd/openvdb_view.cc
 	@echo "Building $@ because of $(list_deps)"
@@ -930,7 +930,7 @@ endif
 
 $(UNITTEST_OBJ_NAMES): %.o: %.cc
 	@echo "Building $@ because of $(list_deps)"
-	$(CXX) -c $(CXXFLAGS) -isystem $(CPPUNIT_INCL_DIR) -fPIC -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -I $(CPPUNIT_INCL_DIR) -fPIC -o $@ $<
 
 ifneq (,$(strip $(CPPUNIT_INCL_DIR)))
 vdb_test: $(LIBOPENVDB) $(UNITTEST_OBJ_NAMES)
@@ -1039,7 +1039,7 @@ $(DEPEND): $(ALL_INCLUDE_FILES) $(ALL_SRC_FILES) openvdb_viewer
 	    for f in $(UNITTEST_SRC_NAMES); \
 	        do $(CXX) $(CXXFLAGS) -O0 \
 	            -MM $$f -MT `echo $$f | sed 's%\.[^.]*%.o%'` \
-	            -isystem $(CPPUNIT_INCL_DIR) >> $(DEPEND); \
+	            -I $(CPPUNIT_INCL_DIR) >> $(DEPEND); \
 	    done; \
 	fi
 
@@ -1050,11 +1050,11 @@ HEADER_TEST_CXXFLAGS := $(CXXFLAGS)
 HEADER_TEST_FILES := $(addprefix header_test-,$(INCLUDE_NAMES) $(CMD_INCLUDE_NAMES))
 ifeq (yes,$(has_cppunit))
     HEADER_TEST_FILES += $(addprefix header_test-,$(UNITTEST_INCLUDE_NAMES))
-    HEADER_TEST_CXXFLAGS += -isystem $(CPPUNIT_INCL_DIR)
+    HEADER_TEST_CXXFLAGS += -I $(CPPUNIT_INCL_DIR)
 endif
 ifeq (yes,$(has_glfw))
     HEADER_TEST_FILES += $(addprefix header_test-,$(LIBVIEWER_INCLUDE_NAMES))
-    HEADER_TEST_CXXFLAGS += -isystem $(GLFW_INCL_DIR) -DGL_GLEXT_PROTOTYPES=1
+    HEADER_TEST_CXXFLAGS += -I $(GLFW_INCL_DIR) -DGL_GLEXT_PROTOTYPES=1
 endif
 ifeq (yes,$(has_python))
     HEADER_TEST_FILES += $(addprefix header_test-,$(PYTHON_INCLUDE_NAMES))
